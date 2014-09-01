@@ -6,7 +6,7 @@ if (!defined('_PS_VERSION_')){
 
 class ImageCloudGallery extends Module
 {
-
+	protected $max_image_size = 1048576;
 	/**
 	* @author Linus Lundevall <developer@prettypegs.com>
 	*/
@@ -20,6 +20,11 @@ class ImageCloudGallery extends Module
 		$this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.6');
 		$this->bootstrap = true;
 
+		$this->module_path = _PS_MODULE_DIR_.$this->name.'/';
+		$this->uploads_path = _PS_MODULE_DIR_.$this->name.'/img/';
+		$this->admin_tpl_path = _PS_MODULE_DIR_.$this->name.'/views/templates/admin/';
+		$this->hooks_tpl_path = _PS_MODULE_DIR_.$this->name.'/views/templates/hooks/';
+
 		parent::__construct();
 
 		$this->displayName = $this->l('Image Cloud Gallery');
@@ -27,7 +32,7 @@ class ImageCloudGallery extends Module
 
 		$this->confirmUninstall = $this->l('Are you sure you want to uninstall? We are not friends anymore...');
 
-		if (!Configuration::get('IMAGECLOUDGALLERY'))
+		if (!Configuration::get('IMAGECLOUDGALLERY_NAME'))
 		{
 			$this->warning = $this->l('No name provided');
 		}
@@ -44,9 +49,11 @@ class ImageCloudGallery extends Module
     }
 
   	return parent::install() &&
+  	$this->installDB() &&
     $this->registerHook('leftColumn') &&
     $this->registerHook('header') &&
-    Configuration::updateValue('IMAGECLOUDGALLERY', 'my friend');
+    $this->registerHook('displayBackOfficeHeader') &&
+    Configuration::updateValue('IMAGECLOUDGALLERY_NAME', 'my friend');
 	}
 
 	/**
@@ -67,19 +74,30 @@ class ImageCloudGallery extends Module
 	{
 		$output = null;
 
+
 		if (Tools::isSubmit('submit'.$this->name))
 		{
-			$image_cloud_gallery = strval(Tools::getValue('IMAGECLOUDGALLERY'));
+			$image_cloud_gallery = strval(Tools::getValue('IMAGECLOUDGALLERY_NAME'));
 			if (!$image_cloud_gallery
 				|| empty($image_cloud_gallery)
-				|| !Validate::isGenericName($image_cloud_gallery))
+				|| !Validate::isGenericName($image_cloud_gallery)) {
 				$output .= $this->displayError($this->l('Invalid Configuration value'));
+			}
 			else
 			{
-				Configuration::updateValue('IMAGECLOUDGALLERY', $image_cloud_gallery);
+				Configuration::updateValue('IMAGECLOUDGALLERY_NAME', $image_cloud_gallery);
 				$output .= $this->displayConfirmation($this->l('Settings updated'));
 			}
 		}
+
+		if (Tools::isSubmit('newItem'))
+			$this->addItem();
+		elseif (Tools::isSubmit('updateItem'))
+			$this->updateItem();
+		elseif (Tools::isSubmit('removeItem'))
+			$this->removeItem();
+
+		$output .= $this->renderThemeConfiguratorForm();
 		return $output.$this->displayForm();
 	}
 
@@ -93,24 +111,24 @@ class ImageCloudGallery extends Module
 		$default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
 
     // Init Fields form array
-		$fields_form[0]['form'] = array(
-			'legend' => array(
-				'title' => $this->l('Settings'),
-				),
-			'input' => array(
-				array(
-					'type' => 'text',
-					'label' => $this->l('Configuration value'),
-					'name' => 'IMAGECLOUDGALLERY',
-					'size' => 20,
-					'required' => true
-					)
-				),
-			'submit' => array(
-				'title' => $this->l('Save'),
-				'class' => 'button'
-				)
-			);
+		// $fields_form[0]['form'] = array(
+		// 	'legend' => array(
+		// 		'title' => $this->l('Settings'),
+		// 		),
+		// 	'input' => array(
+		// 		array(
+		// 			'type' => 'text',
+		// 			'label' => $this->l('Configuration value'),
+		// 			'name' => 'IMAGECLOUDGALLERY_NAME',
+		// 			'size' => 20,
+		// 			'required' => true
+		// 			)
+		// 		),
+		// 	'submit' => array(
+		// 		'title' => $this->l('Save'),
+		// 		'class' => 'button'
+		// 		)
+		// 	);
 
 		$helper = new HelperForm();
 
@@ -143,10 +161,20 @@ class ImageCloudGallery extends Module
     	);
 
     // Load current value
-    $helper->fields_value['IMAGECLOUDGALLERY'] = Configuration::get('IMAGECLOUDGALLERY');
+    $helper->fields_value['IMAGECLOUDGALLERY_NAME'] = Configuration::get('IMAGECLOUDGALLERY_NAME');
 
-    return $helper->generateForm($fields_form);
+    //return $helper->generateForm($fields_form);
   }
+
+  public function hookDisplayBackOfficeHeader()
+	{
+		if (Tools::getValue('configure') != $this->name)
+			return;
+
+		$this->context->controller->addCSS($this->_path.'css/admin.css');
+		$this->context->controller->addJquery();
+		$this->context->controller->addJS($this->_path.'js/admin.js');
+	}
 
 
 	/**
@@ -156,7 +184,7 @@ class ImageCloudGallery extends Module
 	{
 		$this->context->smarty->assign(
 			array(
-				'imagecloudgallery' => Configuration::get('IMAGECLOUDGALLERY'),
+				'imagecloudgallery' => Configuration::get('IMAGECLOUDGALLERY_NAME'),
 				'my_module_link' => $this->context->link->getModuleLink('imagecloudgallery', 'display')
 				)
 			);
@@ -178,5 +206,163 @@ class ImageCloudGallery extends Module
 	{
 		$this->context->controller->addCSS($this->_path.'css/imagecloudgallery.css', 'all');
 	}
+
+	/**
+	* Creates the tables in database for this module.
+	* @author Linus Lundevall <developer@prettypegs.com>
+	*/
+	private function installDB()
+	{
+		return (
+			Db::getInstance()->Execute('DROP TABLE IF EXISTS `'._DB_PREFIX_.'cloud_gallery_image_lang`') &&
+			Db::getInstance()->Execute("
+			CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."cloud_gallery_image_lang` (
+			  `id_cloud_gallery_image` int(255) unsigned NOT NULL AUTO_INCREMENT,
+			  `id_lang` int(11) NOT NULL,
+			  `image` VARCHAR(100),
+			  `image_w` VARCHAR(10),
+				`image_h` VARCHAR(10),
+				`title` text NOT NULL,
+				`url` TEXT,
+				`target` tinyint(1) unsigned NOT NULL DEFAULT '0',
+				`active` tinyint(1) unsigned NOT NULL DEFAULT '1',
+			  `description` text NOT NULL,
+			  `item_order` int(10) unsigned NOT NULL COMMENT 'Normaly they are sorted by date. But also listens to this value. (greater == first).' ,
+			  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Date when this that was created.',
+			  PRIMARY KEY (`id_cloud_gallery_image`)
+			) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8;"));
+
+	}
+
+	/**
+	* This is suppose to set up the admin page
+	* @author Linus Lundevall <developer@prettypegs.com>
+	*/
+
+	protected function renderThemeConfiguratorForm()
+	{
+		$id_shop = (int)$this->context->shop->id;
+		$items = array();
+
+		$this->context->smarty->assign('htmlcontent', array(
+			'admin_tpl_path' => $this->admin_tpl_path,
+			'hooks_tpl_path' => $this->hooks_tpl_path,
+
+			'info' => array(
+				'module' => $this->name,
+				'name' => $this->displayName,
+				'version' => $this->version,
+				'psVersion' => _PS_VERSION_,
+				'context' => (Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') == 0) ? 1 : ($this->context->shop->getTotalShops() != 1) ? $this->context->shop->getContext() : 1
+				)
+			));
+
+		$items = Db::getInstance()->ExecuteS('
+			SELECT * FROM `'._DB_PREFIX_.'cloud_gallery_image_lang`
+			ORDER BY created_at ASC'
+			);
+			//AND id_lang = '.(int)$language['id_lang'].'
+			//WHERE id_shop = '.(int)$id_shop.'
+			//AND hook = \''.pSQL($hook).'\'
+
+		$this->context->smarty->assign('htmlitems', array(
+			'items' => $items,
+			'postAction' => 
+			'index.php?tab=AdminModules&configure='.$this->name
+			.'&token='.Tools::getAdminTokenLite('AdminModules')
+			.'&tab_module=other&module_name='.$this->name.'',
+			'id_shop' => $id_shop
+			));
+
+		return $this->display(__FILE__, 'views/templates/admin/admin.tpl');
+	}
+
+
+	/**
+	* Saves an item in admin panel
+	* @author Linus Lundevall <developer@prettypegs.com>
+	*/
+	protected function updateItem()
+	{
+		$id_item = (int)Tools::getValue('item_id');
+		$title = Tools::getValue('item_title');
+		$description= Tools::getValue('item_description');
+
+		if (!Validate::isCleanHtml($title, (int)Configuration::get('PS_ALLOW_HTML_IFRAME')) || !Validate::isCleanHtml($description, (int)Configuration::get('PS_ALLOW_HTML_IFRAME')))
+		{
+			$this->context->smarty->assign('error', $this->l('Invalid content'));
+			return false;
+		}
+
+		$new_image = '';
+		$image_w = (is_numeric(Tools::getValue('item_img_w'))) ? (int)Tools::getValue('item_img_w') : '';
+		$image_h = (is_numeric(Tools::getValue('item_img_h'))) ? (int)Tools::getValue('item_img_h') : '';
+
+		if (!empty($_FILES['item_img']['name']))
+		{
+			if ($old_image = Db::getInstance()->getValue('SELECT image FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` WHERE id_cloud_gallery_image = '.(int)$id_item))
+				if (file_exists(dirname(__FILE__).'/img/'.$old_image))
+					@unlink(dirname(__FILE__).'/img/'.$old_image);
+
+			if (!$image = $this->uploadImage($_FILES['item_img'], $image_w, $image_h))
+				return false;
+
+			$new_image = 'image = \''.pSQL($image).'\',';
+		}
+
+		if (!Db::getInstance()->execute('
+			UPDATE `'._DB_PREFIX_.'cloud_gallery_image_lang` SET 
+					title = \''.pSQL($title).'\',
+					url = \''.pSQL(Tools::getValue('item_url')).'\',
+					target = '.(int)Tools::getValue('item_target').',
+					'.$new_image.'
+					image_w = '.(int)$image_w.',
+					image_h = '.(int)$image_h.',
+					active = '.(int)Tools::getValue('item_active').',
+					description = \''.pSQL($description, true).'\'
+			WHERE id_cloud_gallery_image = '.(int)Tools::getValue('item_id')
+		))
+		{
+			if ($image = Db::getInstance()->getValue('SELECT image FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` WHERE id_cloud_gallery_image = '.(int)Tools::getValue('item_id')))
+				$this->deleteImage($image);
+
+			$this->context->smarty->assign('error', $this->l('An error occurred while saving data.'));
+
+			return false;
+		}
+
+		$this->context->smarty->assign('confirmation', $this->l('Successfully updated.'));
+
+		return true;
+	}
+
+
+	/**
+	* Used in updateItem and newItem
+	* @author Linus Lundevall <developer@prettypegs.com>
+	*/
+	protected function uploadImage($image, $image_w = '', $image_h = '')
+	{
+		$res = false;
+		if (is_array($image) && (ImageManager::validateUpload($image, $this->max_image_size) === false) && ($tmp_name = tempnam(_PS_TMP_IMG_DIR_, 'PS')) && move_uploaded_file($image['tmp_name'], $tmp_name))
+		{
+			$salt = sha1(microtime());
+			$pathinfo = pathinfo($image['name']);
+			$img_name = $salt.'_'.Tools::str2url($pathinfo['filename']).'.'.$pathinfo['extension'];
+
+			if (ImageManager::resize($tmp_name, dirname(__FILE__).'/img/'.$img_name, $image_w, $image_h))
+				$res = true;
+		}
+
+		if (!$res)
+		{
+			$this->context->smarty->assign('error', $this->l('An error occurred during the image upload.'));
+			return false;
+		}
+
+		return $img_name;
+	}
+
+
 
 }

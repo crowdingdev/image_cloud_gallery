@@ -1,1 +1,1 @@
-Welcome to my shop!
+This is a gallery
