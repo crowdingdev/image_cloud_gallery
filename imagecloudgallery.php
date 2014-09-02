@@ -50,10 +50,9 @@ class ImageCloudGallery extends Module
 
   	return parent::install() &&
   	$this->installDB() &&
-    $this->registerHook('leftColumn') &&
     $this->registerHook('header') &&
     $this->registerHook('displayBackOfficeHeader') &&
-    Configuration::updateValue('IMAGECLOUDGALLERY_NAME', 'my friend');
+    Configuration::updateValue('IMAGECLOUDGALLERY_NAME', 'Gallery');
 	}
 
 	/**
@@ -222,7 +221,7 @@ class ImageCloudGallery extends Module
 			  `image` VARCHAR(100),
 			  `image_w` VARCHAR(10),
 				`image_h` VARCHAR(10),
-				`number_of_column int(10) DEFAULT 4,
+				`number_of_column` int(10) DEFAULT 4,
 				`title` text NOT NULL,
 				`url` TEXT,
 				`target` tinyint(1) unsigned NOT NULL DEFAULT '0',
