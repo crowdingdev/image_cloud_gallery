@@ -1,20 +1,30 @@
-.image-cloud-gallery-wrapper{
-
-
-
-
-}
-
-.image-cloud-gallery-wrapper .text-content{
-
-color: white;
-
-background: black;
-opacity: 0.5;
-padding: 20px;
-margin: 0 -15px 0 -15px;	
-}
-
 .breadcrumb{
 	display:none;
+}
+
+.image-cloud-gallery-wrapper {
+	margin-top:5px;
+	.text-content{
+		display:none;
+		color: white;
+		background-color: rgba(0,0,0,0.5);
+		padding: 1px 13px 14px 16px;
+		margin: 0 -15px 0 -15px;
+	}
+
+	.cloud-item{
+		margin: 0 3px 3px 0;
+		background-repeat: no-repeat;
+		&:hover{
+			transition: all 0.4s ease;
+			z-index: 999;
+			-ms-transform: scale(1.1,1.1); /* IE 9 */
+			-webkit-transform: scale(1.1,1.1); /* Chrome, Safari, Opera */
+			transform: scale(1.1,1.1);
+
+			.text-content{
+				display:block;
+			}
+		}
+	}
 }

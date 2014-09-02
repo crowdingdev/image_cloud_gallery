@@ -23,10 +23,8 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-	<div id="" class=" tab-pane " >
+	<div id="" class="tab-pane">
 
-		
-	
 			<ul id="items" class="list-unstyled">
 				{foreach from=$htmlitems.items item=item}
 					<li id="item-{$item.id_cloud_gallery_image|escape:'htmlall':'UTF-8'}" class="item well">
@@ -71,6 +69,15 @@
 										<input type="text" name="item_title" value="{$item.title|escape:'htmlall':'UTF-8'}" />
 									</div>
 								</div>
+
+				<div class="item-order item-field form-group">
+					<label class="control-label col-lg-3">{l s='Item order' mod='themeconfigurator'}</label>
+					<div class="col-lg-7">
+						<input type="number" name="item_order" maxlength="4" value="{$item.item_order}" />
+					</div>
+				</div>
+
+
 								<div class="image item-field form-group">
 									<label class="control-label col-lg-3">{l s='Load your image' mod='themeconfigurator'}</label>
 									<div class="col-lg-7">
@@ -78,11 +85,11 @@
 									</div>
 								</div>
 								<div class="image_w item-field form-group">
-									<label class="control-label col-lg-3">{l s='Image width' mod='themeconfigurator'}</label>
+									<label class="control-label col-lg-3">{l s='Image width in columns (max: 12, min: 1)' mod='themeconfigurator'}</label>
 									<div class="col-lg-7">
 										<div class="input-group fixed-width-lg">
 											<input name="item_img_w" type="text" maxlength="4" size="4" value="{$item.image_w|escape:'htmlall':'UTF-8'}"/>
-											<span class="input-group-addon">{l s='pixels'}</span>
+											<span class="input-group-addon">{l s='columns'}</span>
 										</div>
 									</div>
 								</div>

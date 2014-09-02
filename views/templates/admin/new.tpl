@@ -36,28 +36,18 @@
 						<input class="form-control" type="text" name="item_title"/>
 					</div>
 				</div>
-				<div class="title_use item-field form-group">
-					<div class="col-lg-9 col-lg-offset-3">
-						<div class="checkbox">
-							<label class="control-label">
-								{l s='Use title in front' mod='themeconfigurator'}
-								<input type="checkbox" name="item_title_use" value="1" />
-							</label>
-						</div>
-					</div>
-				</div>
-				<div class="hook item-field form-group">
-					<label class="control-label col-lg-3">{l s='Hook' mod='themeconfigurator'}</label>
+
+
+
+				<div class="item-order item-field form-group">
+					<label class="control-label col-lg-3">{l s='Item order' mod='themeconfigurator'}</label>
 					<div class="col-lg-7">
-						<select class="form-control fixed-width-lg" name="item_hook" default="home">
-							<option value="home">home</option>  
-							<option value="top">top</option>
-							<option value="left">left</option>
-							<option value="right">right</option>
-							<option value="footer">footer</option>  
-						</select>
+						<input type="number" maxlength="4" name="item_order" />
 					</div>
 				</div>
+
+
+
 				<div class="image item-field form-group">
 					<label class="control-label col-lg-3">{l s='Image' mod='themeconfigurator'}</label>
 					<div class="col-lg-7">
@@ -66,10 +56,10 @@
 				</div>
 				<div class="image_w item-field form-group">
 
-					<label class="control-label col-lg-3">{l s='Image width' mod='themeconfigurator'}</label>
+					<label class="control-label col-lg-3">{l s='Image width in columns (max: 12, min: 1)' mod='themeconfigurator'}</label>
 					<div class="col-lg-7">
 						<div class="input-group fixed-width-lg">
-							<span class="input-group-addon">{l s='px'}</span>
+							<span class="input-group-addon">{l s='columns'}</span>
 							<input name="item_img_w" type="text" maxlength="4"/>
 						</div>
 					</div>

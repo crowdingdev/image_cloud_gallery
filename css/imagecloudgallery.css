@@ -1,13 +1,36 @@
-/* line 8, ../sass/imagecloudgallery.scss */
-.image-cloud-gallery-wrapper .text-content {
-  color: white;
-  background: black;
-  opacity: 0.5;
-  padding: 20px;
-  margin: 0 -15px 0 -15px;
-}
-
-/* line 18, ../sass/imagecloudgallery.scss */
+/* line 1, ../sass/imagecloudgallery.scss */
 .breadcrumb {
   display: none;
+}
+
+/* line 5, ../sass/imagecloudgallery.scss */
+.image-cloud-gallery-wrapper {
+  margin-top: 5px;
+}
+/* line 7, ../sass/imagecloudgallery.scss */
+.image-cloud-gallery-wrapper .text-content {
+  display: none;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 1px 13px 14px 16px;
+  margin: 0 -15px 0 -15px;
+}
+/* line 15, ../sass/imagecloudgallery.scss */
+.image-cloud-gallery-wrapper .cloud-item {
+  margin: 0 3px 3px 0;
+  background-repeat: no-repeat;
+}
+/* line 18, ../sass/imagecloudgallery.scss */
+.image-cloud-gallery-wrapper .cloud-item:hover {
+  transition: all 0.4s ease;
+  z-index: 999;
+  -ms-transform: scale(1.1, 1.1);
+  /* IE 9 */
+  -webkit-transform: scale(1.1, 1.1);
+  /* Chrome, Safari, Opera */
+  transform: scale(1.1, 1.1);
+}
+/* line 25, ../sass/imagecloudgallery.scss */
+.image-cloud-gallery-wrapper .cloud-item:hover .text-content {
+  display: block;
 }

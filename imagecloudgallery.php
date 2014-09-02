@@ -305,7 +305,7 @@ class ImageCloudGallery extends Module
 				if (file_exists(dirname(__FILE__).'/img/'.$old_image))
 					@unlink(dirname(__FILE__).'/img/'.$old_image);
 
-			if (!$image = $this->uploadImage($_FILES['item_img'], $image_w, $image_h))
+			if (!$image = $this->uploadImage($_FILES['item_img'], '',''))
 				return false;
 
 			$new_image = 'image = \''.pSQL($image).'\',';
@@ -319,6 +319,7 @@ class ImageCloudGallery extends Module
 					'.$new_image.'
 					image_w = '.(int)$image_w.',
 					image_h = '.(int)$image_h.',
+					item_order ='. (int)Tools::getValue('item_order').',
 					active = '.(int)Tools::getValue('item_active').',
 					description = \''.pSQL($description, true).'\'
 			WHERE id_cloud_gallery_image = '.(int)Tools::getValue('item_id')
@@ -387,8 +388,8 @@ class ImageCloudGallery extends Module
 		))
 			$current_order = 1;
 
-		$image_w = is_numeric(Tools::getValue('item_img_w')) ? (int)Tools::getValue('item_img_w') : '';
-		$image_h = is_numeric(Tools::getValue('item_img_h')) ? (int)Tools::getValue('item_img_h') : '';
+		$image_w =  '';
+		$image_h = '';
 
 		if (!empty($_FILES['item_img']['name']))
 		{
@@ -403,13 +404,12 @@ class ImageCloudGallery extends Module
 		}
 
 		if (!Db::getInstance()->Execute('
-			INSERT INTO `'._DB_PREFIX_.'cloud_gallery_image_lang` ( 
+			INSERT INTO `'._DB_PREFIX_.'cloud_gallery_image_lang` (
 					 `item_order`, `title`, `url`, `target`, `image`, `image_w`, `image_h`, `description`, `active`
-			) VALUES ( 
-
-					\''.(int)$current_order.'\',
+			) VALUES (
+					'. (int)Tools::getValue('item_order') .',
 					\''.pSQL($title).'\',
-					\''.pSQL(Tools::getValue('item_url')).'\',
+					\''.pSQL(Tools::getValue('item_url')) .'\',
 					\''.(int)Tools::getValue('item_target').'\',
 					\''.pSQL($image).'\',
 					\''.pSQL($image_w).'\',
