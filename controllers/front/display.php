@@ -3,7 +3,15 @@ class ImageCloudGallerydisplayModuleFrontController extends ModuleFrontControlle
 {
   public function initContent()
   {
+
     parent::initContent();
-    $this->setTemplate('display.tpl');
+			$items = array();
+
+		// Selects all rows where active(enabled) == 1(true)
+    $items = Db::getInstance()->ExecuteS('SELECT * FROM `ps_cloud_gallery_image_lang` WHERE `active`= 1 ORDER BY created_at ASC');
+
+  	$this->context->smarty->assign( array( 'items' => $items ) );
+
+    $this->setTemplate( 'display.tpl' );
   }
 }

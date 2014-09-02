@@ -49,8 +49,8 @@
 							</div>
 							<span class="item-order">{$item.title}</span>
 							<br>
-							{if $item.image}
-								<img src="{$module_dir}img/{$item.image}" rel="#comments_{$item.id_cloud_gallery_image}" class="preview img-thumbnail" />
+							{if $item.image && isset($item.image)}
+								<img src="{$module_dir}img/{$item.image}" style="height:100px; rel="#comments_{$item.id_cloud_gallery_image}" class="preview img-thumbnail" />
 							{/if}
 							<div class="item-container clearfix" style="display:none">
 								<input type="hidden" name="item_id" value="{$item.id_cloud_gallery_image|escape:'htmlall':'UTF-8'}" />

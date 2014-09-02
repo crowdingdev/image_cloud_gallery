@@ -222,6 +222,7 @@ class ImageCloudGallery extends Module
 			  `image` VARCHAR(100),
 			  `image_w` VARCHAR(10),
 				`image_h` VARCHAR(10),
+				`number_of_column int(10) DEFAULT 4,
 				`title` text NOT NULL,
 				`url` TEXT,
 				`target` tinyint(1) unsigned NOT NULL DEFAULT '0',
@@ -361,6 +362,105 @@ class ImageCloudGallery extends Module
 		}
 
 		return $img_name;
+	}
+
+	/**
+	* Used for adding new images to the cloud gallery.
+	* @author Linus Lundevall <developer@prettypegs.com>
+	*/
+	protected function addItem()
+	{
+		$title = Tools::getValue('item_title');
+		$description = Tools::getValue('item_description');
+
+		if (!Validate::isCleanHtml($title, (int)Configuration::get('PS_ALLOW_HTML_IFRAME'))
+			|| !Validate::isCleanHtml($description, (int)Configuration::get('PS_ALLOW_HTML_IFRAME')))
+		{
+			$this->context->smarty->assign('error', $this->l('Invalid content'));
+			return false;
+		}
+
+		if (!$current_order = (int)Db::getInstance()->getValue('
+			SELECT item_order + 1
+			FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` 
+				ORDER BY item_order DESC'
+		))
+			$current_order = 1;
+
+		$image_w = is_numeric(Tools::getValue('item_img_w')) ? (int)Tools::getValue('item_img_w') : '';
+		$image_h = is_numeric(Tools::getValue('item_img_h')) ? (int)Tools::getValue('item_img_h') : '';
+
+		if (!empty($_FILES['item_img']['name']))
+		{
+			if (!$image = $this->uploadImage($_FILES['item_img'], $image_w, $image_h))
+				return false;
+		}
+		else
+		{
+			$image = '';
+			$image_w = '';
+			$image_h = '';
+		}
+
+		if (!Db::getInstance()->Execute('
+			INSERT INTO `'._DB_PREFIX_.'cloud_gallery_image_lang` ( 
+					 `item_order`, `title`, `url`, `target`, `image`, `image_w`, `image_h`, `description`, `active`
+			) VALUES ( 
+
+					\''.(int)$current_order.'\',
+					\''.pSQL($title).'\',
+					\''.pSQL(Tools::getValue('item_url')).'\',
+					\''.(int)Tools::getValue('item_target').'\',
+					\''.pSQL($image).'\',
+					\''.pSQL($image_w).'\',
+					\''.pSQL($image_h).'\',
+					\''.pSQL($description, true).'\',
+					1)'
+		))
+		{
+			if (!Tools::isEmpty($image))
+				$this->deleteImage($image);
+
+			$this->context->smarty->assign('error', $this->l('An error occurred while saving data.'));
+			return false;
+		}
+
+		$this->context->smarty->assign('confirmation', $this->l('New item successfully added.'));
+		return true;
+	}
+	
+	protected function deleteImage($image)
+	{
+		$file_name = $this->uploads_path.$image;
+
+		if (realpath(dirname($file_name)) != realpath($this->uploads_path))
+			Tools::dieOrLog(sprintf('Could not find upload directory'));
+
+		if ($image != '' && is_file($file_name) && !strpos($file_name, 'banner-img') && !strpos($file_name, 'bg-theme') && !strpos($file_name, 'footer-bg'))
+			unlink($file_name);
+	}
+
+
+	protected function removeItem()
+	{
+		$id_item = (int)Tools::getValue('item_id');
+
+		if ($image = Db::getInstance()->getValue('SELECT image FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` WHERE id_cloud_gallery_image = '.(int)$id_item))
+			$this->deleteImage($image);
+
+		Db::getInstance()->delete(_DB_PREFIX_.'cloud_gallery_image_lang', 'id_cloud_gallery_image = '.(int)$id_item);
+
+		if (Db::getInstance()->Affected_Rows() == 1)
+		{
+			Db::getInstance()->execute('
+				UPDATE `'._DB_PREFIX_.'cloud_gallery_image_lang` 
+				SET item_order = item_order-1 
+				WHERE (item_order > '.(int)Tools::getValue('item_order').')'
+			);
+			Tools::redirectAdmin('index.php?tab=AdminModules&configure='.$this->name.'&conf=6&token='.Tools::getAdminTokenLite('AdminModules'));
+		}
+		else
+			$this->context->smarty->assign('error', $this->l('Can\'t delete the slide.'));
 	}
 
 

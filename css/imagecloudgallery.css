@@ -1,0 +1,13 @@
+/* line 8, ../sass/imagecloudgallery.scss */
+.image-cloud-gallery-wrapper .text-content {
+  color: white;
+  background: black;
+  opacity: 0.5;
+  padding: 20px;
+  margin: 0 -15px 0 -15px;
+}
+
+/* line 18, ../sass/imagecloudgallery.scss */
+.breadcrumb {
+  display: none;
+}
