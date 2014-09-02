@@ -4,7 +4,7 @@ if (!defined('_PS_VERSION_')){
   }
 
 
-class ImageCloudGallery extends Module
+class PrettypegsAttributePreferences extends Module
 {
 	protected $max_image_size = 1048576;
 	/**
@@ -12,8 +12,8 @@ class ImageCloudGallery extends Module
 	*/
 	public function __construct()
 	{
-		$this->name = 'imagecloudgallery';
-		$this->tab = 'advertising_marketing';
+		$this->name = 'prettypegsattributepreferences';
+		$this->tab = 'font_office_features';
 		$this->version = '1.0';
 		$this->author = 'Linus Lundevall @prettypegs.com';
 		$this->need_instance = 0;
@@ -27,15 +27,15 @@ class ImageCloudGallery extends Module
 
 		parent::__construct();
 
-		$this->displayName = $this->l('Image Cloud Gallery');
-		$this->description = $this->l('Create cloud of images as a gallery.');
+		$this->displayName = $this->l('Prettypegs Attribute Preferences');
+		$this->description = $this->l('This module makes it possible to select what attributes a product fits depending on the category is in the breadcrumb.');
 
 		$this->confirmUninstall = $this->l('Are you sure you want to uninstall? We are not friends anymore...');
 
-		if (!Configuration::get('IMAGECLOUDGALLERY_NAME'))
-		{
-			$this->warning = $this->l('No name provided');
-		}
+		// if (!Configuration::get('IMAGECLOUDGALLERY_NAME'))
+		// {
+		// 	$this->warning = $this->l('No name provided');
+		// }
 
 	}
 
@@ -74,6 +74,12 @@ class ImageCloudGallery extends Module
 		$output = null;
 
 
+
+		// global $currentIndex, $cookie;
+
+		// $attGroups = MAttributes::attributeGroupList($cookie->id_lang);
+
+
 		if (Tools::isSubmit('submit'.$this->name))
 		{
 			$image_cloud_gallery = strval(Tools::getValue('IMAGECLOUDGALLERY_NAME'));
@@ -109,26 +115,6 @@ class ImageCloudGallery extends Module
     // Get default language
 		$default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
 
-    // Init Fields form array
-		// $fields_form[0]['form'] = array(
-		// 	'legend' => array(
-		// 		'title' => $this->l('Settings'),
-		// 		),
-		// 	'input' => array(
-		// 		array(
-		// 			'type' => 'text',
-		// 			'label' => $this->l('Configuration value'),
-		// 			'name' => 'IMAGECLOUDGALLERY_NAME',
-		// 			'size' => 20,
-		// 			'required' => true
-		// 			)
-		// 		),
-		// 	'submit' => array(
-		// 		'title' => $this->l('Save'),
-		// 		'class' => 'button'
-		// 		)
-		// 	);
-
 		$helper = new HelperForm();
 
     // Module, token and currentIndex
@@ -160,7 +146,7 @@ class ImageCloudGallery extends Module
     	);
 
     // Load current value
-    $helper->fields_value['IMAGECLOUDGALLERY_NAME'] = Configuration::get('IMAGECLOUDGALLERY_NAME');
+    //$helper->fields_value['IMAGECLOUDGALLERY_NAME'] = Configuration::get('IMAGECLOUDGALLERY_NAME');
 
     //return $helper->generateForm($fields_form);
   }
@@ -176,34 +162,15 @@ class ImageCloudGallery extends Module
 	}
 
 
-	/**
-	* @author Linus Lundevall <developer@prettypegs.com>
-	*/
-	public function hookDisplayLeftColumn($params)
-	{
-		$this->context->smarty->assign(
-			array(
-				'imagecloudgallery' => Configuration::get('IMAGECLOUDGALLERY_NAME'),
-				'my_module_link' => $this->context->link->getModuleLink('imagecloudgallery', 'display')
-				)
-			);
-		return $this->display(__FILE__, 'imagecloudgallery.tpl');
-	}
 
-	/**
-	* @author Linus Lundevall <developer@prettypegs.com>
-	*/
-	public function hookDisplayRightColumn($params)
-	{
-		return $this->hookDisplayLeftColumn($params);
-	}
+
 
 	/**
 	* @author Linus Lundevall <developer@prettypegs.com>
 	*/
 	public function hookDisplayHeader()
 	{
-		$this->context->controller->addCSS($this->_path.'css/imagecloudgallery.css', 'all');
+		$this->context->controller->addCSS($this->_path.'css/prettypegsattributepreferences.css', 'all');
 	}
 
 	/**
@@ -213,23 +180,19 @@ class ImageCloudGallery extends Module
 	private function installDB()
 	{
 		return (
-			Db::getInstance()->Execute('DROP TABLE IF EXISTS `'._DB_PREFIX_.'cloud_gallery_image_lang`') &&
+			Db::getInstance()->Execute('DROP TABLE IF EXISTS `'._DB_PREFIX_.'prettypegs_attribute_preferences`') &&
 			Db::getInstance()->Execute("
-			CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."cloud_gallery_image_lang` (
-			  `id_cloud_gallery_image` int(255) unsigned NOT NULL AUTO_INCREMENT,
-			  `id_lang` int(11) NOT NULL,
-			  `image` VARCHAR(100),
-			  `image_w` VARCHAR(10),
-				`image_h` VARCHAR(10),
-				`number_of_column` int(10) DEFAULT 4,
-				`title` text NOT NULL,
-				`url` TEXT,
-				`target` tinyint(1) unsigned NOT NULL DEFAULT '0',
-				`active` tinyint(1) unsigned NOT NULL DEFAULT '1',
+			CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."prettypegs_attribute_preferences` (
+			  `id_prettypegs_attribute_preferences` int(255) unsigned NOT NULL AUTO_INCREMENT,
+			  `id_product` int(11) NOT NULL,
+			  `id_category` int(11) NOT NULL,
+			  `id_attribute` int(11) NOT NULL,
+				`enabled` tinyint(1) unsigned NOT NULL DEFAULT '1',
 			  `description` text NOT NULL,
-			  `item_order` int(10) unsigned NOT NULL COMMENT 'Normaly they are sorted by date. But also listens to this value. (greater == first).' ,
+			  `importance` int(10) unsigned NOT NULL ,
 			  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Date when this that was created.',
-			  PRIMARY KEY (`id_cloud_gallery_image`)
+			  PRIMARY KEY (`id_prettypegs_attribute_preferences`),
+			   KEY `select` (`id_product`,`id_category`,`id_attribute`)
 			) ENGINE="._MYSQL_ENGINE_." DEFAULT CHARSET=utf8;"));
 
 	}
