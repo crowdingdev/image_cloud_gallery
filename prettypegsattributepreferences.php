@@ -3,10 +3,12 @@ if (!defined('_PS_VERSION_')){
   exit;
   }
 
+require_once(_PS_MODULE_DIR_.'prettypegsattributepreferences/classes/DBQueryHelperClass.php');
 
 class PrettypegsAttributePreferences extends Module
 {
 	protected $max_image_size = 1048576;
+
 	/**
 	* @author Linus Lundevall <developer@prettypegs.com>
 	*/
@@ -51,8 +53,7 @@ class PrettypegsAttributePreferences extends Module
   	return parent::install() &&
   	$this->installDB() &&
     $this->registerHook('header') &&
-    $this->registerHook('displayBackOfficeHeader') &&
-    Configuration::updateValue('IMAGECLOUDGALLERY_NAME', 'Gallery');
+    $this->registerHook('displayBackOfficeHeader');
 	}
 
 	/**
@@ -74,12 +75,6 @@ class PrettypegsAttributePreferences extends Module
 		$output = null;
 
 
-
-		// global $currentIndex, $cookie;
-
-		// $attGroups = MAttributes::attributeGroupList($cookie->id_lang);
-
-
 		if (Tools::isSubmit('submit'.$this->name))
 		{
 			$image_cloud_gallery = strval(Tools::getValue('IMAGECLOUDGALLERY_NAME'));
@@ -96,11 +91,17 @@ class PrettypegsAttributePreferences extends Module
 		}
 
 		if (Tools::isSubmit('newItem'))
+		{
 			$this->addItem();
+		}
 		elseif (Tools::isSubmit('updateItem'))
+		{
 			$this->updateItem();
+		}
 		elseif (Tools::isSubmit('removeItem'))
+		{
 			$this->removeItem();
+		}
 
 		$output .= $this->renderThemeConfiguratorForm();
 		return $output.$this->displayForm();
@@ -162,15 +163,18 @@ class PrettypegsAttributePreferences extends Module
 	}
 
 
-
-
-
 	/**
 	* @author Linus Lundevall <developer@prettypegs.com>
 	*/
 	public function hookDisplayHeader()
 	{
-		$this->context->controller->addCSS($this->_path.'css/prettypegsattributepreferences.css', 'all');
+
+		$attributePreference = DBQueryHelperClass::getAllEnabledPrettypegsAttributePreference();
+		$this->context->smarty->assign(array('attributePreference' => $attributePreference));
+		$this->context->controller->addJS($this->_path.'js/header.js');
+		//$this->context->controller->addCSS($this->_path.'css/prettypegsattributepreferences.css', 'all');
+
+		return $this->display(__FILE__, 'views/templates/hook/header.tpl');
 	}
 
 	/**
@@ -205,7 +209,7 @@ class PrettypegsAttributePreferences extends Module
 	protected function renderThemeConfiguratorForm()
 	{
 		$id_shop = (int)$this->context->shop->id;
-		$items = array();
+	//		$items = array();
 
 		$this->context->smarty->assign('htmlcontent', array(
 			'admin_tpl_path' => $this->admin_tpl_path,
@@ -220,22 +224,30 @@ class PrettypegsAttributePreferences extends Module
 				)
 			));
 
-		$items = Db::getInstance()->ExecuteS('
-			SELECT * FROM `'._DB_PREFIX_.'cloud_gallery_image_lang`
-			ORDER BY created_at ASC'
-			);
-			//AND id_lang = '.(int)$language['id_lang'].'
-			//WHERE id_shop = '.(int)$id_shop.'
-			//AND hook = \''.pSQL($hook).'\'
+		require_once(_PS_MODULE_DIR_.'prettypegsattributepreferences/classes/DBQueryHelperClass.php');
 
-		$this->context->smarty->assign('htmlitems', array(
-			'items' => $items,
+		$attributes = DBQueryHelperClass::getAllAttributes();
+		$products = DBQueryHelperClass::getAllProducts();
+		$categories = DBQueryHelperClass::getAllCategories();
+		$items = DBQueryHelperClass::getAllPrettypegsAttributePreference();
+
+		//$this->context->smarty->assign(array('items' => $items));
+  	$this->context->smarty->assign(array('attributes' => $attributes));
+		$this->context->smarty->assign(array('products' => $products));
+		$this->context->smarty->assign(array('categories' => $categories));
+
+
+
+		$this->context->smarty->assign('htmlItems', array('items' => $items,
 			'postAction' => 
 			'index.php?tab=AdminModules&configure='.$this->name
 			.'&token='.Tools::getAdminTokenLite('AdminModules')
 			.'&tab_module=other&module_name='.$this->name.'',
 			'id_shop' => $id_shop
 			));
+
+
+
 
 		return $this->display(__FILE__, 'views/templates/admin/admin.tpl');
 	}
@@ -247,84 +259,24 @@ class PrettypegsAttributePreferences extends Module
 	*/
 	protected function updateItem()
 	{
-		$id_item = (int)Tools::getValue('item_id');
-		$title = Tools::getValue('item_title');
-		$description= Tools::getValue('item_description');
+		require_once(_PS_MODULE_DIR_.'prettypegsattributepreferences/classes/DBQueryHelperClass.php');
 
-		if (!Validate::isCleanHtml($title, (int)Configuration::get('PS_ALLOW_HTML_IFRAME')) || !Validate::isCleanHtml($description, (int)Configuration::get('PS_ALLOW_HTML_IFRAME')))
-		{
-			$this->context->smarty->assign('error', $this->l('Invalid content'));
-			return false;
-		}
+		$id_item = Tools::getValue('item_id');
+		$id_product = Tools::getValue('id_product');
+		$id_category = Tools::getValue('id_category');
+		$id_attribute = Tools::getValue('id_attribute');
+		$description = Tools::getValue('description');
 
-		$new_image = '';
-		$image_w = (is_numeric(Tools::getValue('item_img_w'))) ? (int)Tools::getValue('item_img_w') : '';
-		$image_h = (is_numeric(Tools::getValue('item_img_h'))) ? (int)Tools::getValue('item_img_h') : '';
+		$result = DBQueryHelperClass::updatePrettypegsAttributePreference($id_item, $id_attribute, $id_category, $id_product, $description);
 
-		if (!empty($_FILES['item_img']['name']))
-		{
-			if ($old_image = Db::getInstance()->getValue('SELECT image FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` WHERE id_cloud_gallery_image = '.(int)$id_item))
-				if (file_exists(dirname(__FILE__).'/img/'.$old_image))
-					@unlink(dirname(__FILE__).'/img/'.$old_image);
-
-			if (!$image = $this->uploadImage($_FILES['item_img'], '',''))
-				return false;
-
-			$new_image = 'image = \''.pSQL($image).'\',';
-		}
-
-		if (!Db::getInstance()->execute('
-			UPDATE `'._DB_PREFIX_.'cloud_gallery_image_lang` SET 
-					title = \''.pSQL($title).'\',
-					url = \''.pSQL(Tools::getValue('item_url')).'\',
-					target = '.(int)Tools::getValue('item_target').',
-					'.$new_image.'
-					image_w = '.(int)$image_w.',
-					image_h = '.(int)$image_h.',
-					item_order ='. (int)Tools::getValue('item_order').',
-					active = '.(int)Tools::getValue('item_active').',
-					description = \''.pSQL($description, true).'\'
-			WHERE id_cloud_gallery_image = '.(int)Tools::getValue('item_id')
-		))
-		{
-			if ($image = Db::getInstance()->getValue('SELECT image FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` WHERE id_cloud_gallery_image = '.(int)Tools::getValue('item_id')))
-				$this->deleteImage($image);
-
+		if(!$result){
 			$this->context->smarty->assign('error', $this->l('An error occurred while saving data.'));
-
 			return false;
 		}
-
-		$this->context->smarty->assign('confirmation', $this->l('Successfully updated.'));
-
-		return true;
-	}
-
-
-	/**
-	* Used in updateItem and newItem
-	* @author Linus Lundevall <developer@prettypegs.com>
-	*/
-	protected function uploadImage($image, $image_w = '', $image_h = '')
-	{
-		$res = false;
-		if (is_array($image) && (ImageManager::validateUpload($image, $this->max_image_size) === false) && ($tmp_name = tempnam(_PS_TMP_IMG_DIR_, 'PS')) && move_uploaded_file($image['tmp_name'], $tmp_name))
-		{
-			$salt = sha1(microtime());
-			$pathinfo = pathinfo($image['name']);
-			$img_name = $salt.'_'.Tools::str2url($pathinfo['filename']).'.'.$pathinfo['extension'];
-
-			if (ImageManager::resize($tmp_name, dirname(__FILE__).'/img/'.$img_name, $image_w, $image_h))
-				$res = true;
+		else{
+			$this->context->smarty->assign('confirmation', $this->l('Successfully updated.'));
+			return true;
 		}
-
-		if (!$res)
-		{
-			$this->context->smarty->assign('error', $this->l('An error occurred during the image upload.'));
-			return false;
-		}
-
-		return $img_name;
 	}
 
 	/**
@@ -333,73 +285,26 @@ class PrettypegsAttributePreferences extends Module
 	*/
 	protected function addItem()
 	{
-		$title = Tools::getValue('item_title');
-		$description = Tools::getValue('item_description');
 
-		if (!Validate::isCleanHtml($title, (int)Configuration::get('PS_ALLOW_HTML_IFRAME'))
-			|| !Validate::isCleanHtml($description, (int)Configuration::get('PS_ALLOW_HTML_IFRAME')))
-		{
-			$this->context->smarty->assign('error', $this->l('Invalid content'));
-			return false;
-		}
+		require_once(_PS_MODULE_DIR_.'prettypegsattributepreferences/classes/DBQueryHelperClass.php');
 
-		if (!$current_order = (int)Db::getInstance()->getValue('
-			SELECT item_order + 1
-			FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` 
-				ORDER BY item_order DESC'
-		))
-			$current_order = 1;
+		$attributes = DBQueryHelperClass::getAllAttributes();
 
-		$image_w =  '';
-		$image_h = '';
+		$id_product = Tools::getValue('id_product');
+		$id_category = Tools::getValue('id_category');
+		$id_attribute = Tools::getValue('id_attribute');
+		$description = Tools::getValue('description');
 
-		if (!empty($_FILES['item_img']['name']))
-		{
-			if (!$image = $this->uploadImage($_FILES['item_img'], $image_w, $image_h))
-				return false;
-		}
-		else
-		{
-			$image = '';
-			$image_w = '';
-			$image_h = '';
-		}
+		$insertResult = DBQueryHelperClass::insertPrettypegsAttributePreference($id_attribute, $id_category, $id_product, $description);
 
-		if (!Db::getInstance()->Execute('
-			INSERT INTO `'._DB_PREFIX_.'cloud_gallery_image_lang` (
-					 `item_order`, `title`, `url`, `target`, `image`, `image_w`, `image_h`, `description`, `active`
-			) VALUES (
-					'. (int)Tools::getValue('item_order') .',
-					\''.pSQL($title).'\',
-					\''.pSQL(Tools::getValue('item_url')) .'\',
-					\''.(int)Tools::getValue('item_target').'\',
-					\''.pSQL($image).'\',
-					\''.pSQL($image_w).'\',
-					\''.pSQL($image_h).'\',
-					\''.pSQL($description, true).'\',
-					1)'
-		))
-		{
-			if (!Tools::isEmpty($image))
-				$this->deleteImage($image);
-
+		if (!$insertResult){
 			$this->context->smarty->assign('error', $this->l('An error occurred while saving data.'));
 			return false;
 		}
-
-		$this->context->smarty->assign('confirmation', $this->l('New item successfully added.'));
-		return true;
-	}
-	
-	protected function deleteImage($image)
-	{
-		$file_name = $this->uploads_path.$image;
-
-		if (realpath(dirname($file_name)) != realpath($this->uploads_path))
-			Tools::dieOrLog(sprintf('Could not find upload directory'));
-
-		if ($image != '' && is_file($file_name) && !strpos($file_name, 'banner-img') && !strpos($file_name, 'bg-theme') && !strpos($file_name, 'footer-bg'))
-			unlink($file_name);
+		else{
+			$this->context->smarty->assign('confirmation', $this->l('New preference successfully added.'));
+			return true;
+		}
 	}
 
 
@@ -407,24 +312,15 @@ class PrettypegsAttributePreferences extends Module
 	{
 		$id_item = (int)Tools::getValue('item_id');
 
-		if ($image = Db::getInstance()->getValue('SELECT image FROM `'._DB_PREFIX_.'cloud_gallery_image_lang` WHERE id_cloud_gallery_image = '.(int)$id_item))
-			$this->deleteImage($image);
-
-		Db::getInstance()->delete(_DB_PREFIX_.'cloud_gallery_image_lang', 'id_cloud_gallery_image = '.(int)$id_item);
+		Db::getInstance()->delete(_DB_PREFIX_.'prettypegs_attribute_preferences', 'id_prettypegs_attribute_preferences = '.(int)$id_item);
 
 		if (Db::getInstance()->Affected_Rows() == 1)
 		{
-			Db::getInstance()->execute('
-				UPDATE `'._DB_PREFIX_.'cloud_gallery_image_lang` 
-				SET item_order = item_order-1 
-				WHERE (item_order > '.(int)Tools::getValue('item_order').')'
-			);
 			Tools::redirectAdmin('index.php?tab=AdminModules&configure='.$this->name.'&conf=6&token='.Tools::getAdminTokenLite('AdminModules'));
 		}
 		else
 			$this->context->smarty->assign('error', $this->l('Can\'t delete the slide.'));
 	}
 
-
-
 }
+
