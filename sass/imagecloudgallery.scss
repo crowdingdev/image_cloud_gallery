@@ -1,6 +1,3 @@
-.breadcrumb{
-	display:none;
-}
 
 .image-cloud-gallery-wrapper {
 	margin-top:5px;
@@ -10,6 +7,9 @@
 		background-color: rgba(0,0,0,0.5);
 		padding: 1px 13px 14px 16px;
 		margin: 0 -15px 0 -15px;
+		a{
+			color: white !important;
+		}
 	}
 
 	.cloud-item{

@@ -212,8 +212,8 @@ class ImageCloudGallery extends Module
 	*/
 	private function installDB()
 	{
+		//Db::getInstance()->Execute('DROP TABLE IF EXISTS `'._DB_PREFIX_.'cloud_gallery_image_lang`') &&
 		return (
-			Db::getInstance()->Execute('DROP TABLE IF EXISTS `'._DB_PREFIX_.'cloud_gallery_image_lang`') &&
 			Db::getInstance()->Execute("
 			CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."cloud_gallery_image_lang` (
 			  `id_cloud_gallery_image` int(255) unsigned NOT NULL AUTO_INCREMENT,

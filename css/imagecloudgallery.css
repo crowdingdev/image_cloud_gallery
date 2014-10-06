@@ -1,19 +1,18 @@
-/* line 1, ../sass/imagecloudgallery.scss */
-.breadcrumb {
-  display: none;
-}
-
-/* line 5, ../sass/imagecloudgallery.scss */
+/* line 2, ../sass/imagecloudgallery.scss */
 .image-cloud-gallery-wrapper {
   margin-top: 5px;
 }
-/* line 7, ../sass/imagecloudgallery.scss */
+/* line 4, ../sass/imagecloudgallery.scss */
 .image-cloud-gallery-wrapper .text-content {
   display: none;
   color: white;
   background-color: rgba(0, 0, 0, 0.5);
   padding: 1px 13px 14px 16px;
   margin: 0 -15px 0 -15px;
+}
+/* line 10, ../sass/imagecloudgallery.scss */
+.image-cloud-gallery-wrapper .text-content a {
+  color: white !important;
 }
 /* line 15, ../sass/imagecloudgallery.scss */
 .image-cloud-gallery-wrapper .cloud-item {
