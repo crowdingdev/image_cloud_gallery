@@ -25,80 +25,66 @@
 
 <div class="new-item">
 	<div class="form-group">
-		<button type="button" class="btn btn-default btn-lg button-new-item"><i class="icon-plus-sign"></i> {l s='Add item' mod='themeconfigurator'}</button>
+		<button type="button" class="btn btn-default btn-lg button-new-item"><i class="icon-plus-sign"></i> {l s='Add item' mod='prettypegsattributepreferences'}</button>
 	</div>
 	<div class="item-container" style="display:none;">
-		<form method="post" action="{$htmlitems.postAction|escape:'htmlall':'UTF-8'}" enctype="multipart/form-data" class="item-form defaultForm  form-horizontal">
+		<form method="post" action="{$htmlItems.postAction|escape:'htmlall':'UTF-8'}" enctype="multipart/form-data" class="item-form defaultForm  form-horizontal">
 			<div class="well">
-				<div class="title item-field form-group">
-					<label class="control-label col-lg-3 ">{l s='Title' mod='themeconfigurator'}</label>
+
+				<div class="hook item-field form-group">
+					<label class="control-label col-lg-3">{l s='Attribute' mod='prettypegsattributepreferences'}</label>
 					<div class="col-lg-7">
-						<input class="form-control" type="text" name="item_title"/>
+						<select class="form-control fixed-width-lg" name="id_attribute" default="home">
+
+							{foreach from=$attributes item=attribute}
+								<option value="{$attribute.id_attribute}">{$attribute.name}</option>  
+							{/foreach}
+
+						</select>
 					</div>
 				</div>
 
 
-
-				<div class="item-order item-field form-group">
-					<label class="control-label col-lg-3">{l s='Item order' mod='themeconfigurator'}</label>
+				<div class="hook item-field form-group">
+					<label class="control-label col-lg-3">{l s='Product' mod='prettypegsattributepreferences'}</label>
 					<div class="col-lg-7">
-						<input type="number" maxlength="4" name="item_order" />
+						<select class="form-control fixed-width-lg" name="id_product" default="home">
+
+							{foreach from=$products item=product}
+								<option value="{$product.id_product}">{$product.name}</option>  
+							{/foreach}
+
+						</select>
 					</div>
 				</div>
 
 
 
-				<div class="image item-field form-group">
-					<label class="control-label col-lg-3">{l s='Image' mod='themeconfigurator'}</label>
+				<div class="hook item-field form-group">
+					<label class="control-label col-lg-3">{l s='Category' mod='prettypegsattributepreferences'}</label>
 					<div class="col-lg-7">
-						<input type="file" name="item_img" />
-					</div>
-				</div>
-				<div class="image_w item-field form-group">
+						<select class="form-control fixed-width-lg" name="id_category" default="home">
 
-					<label class="control-label col-lg-3">{l s='Image width in columns (max: 12, min: 1)' mod='themeconfigurator'}</label>
-					<div class="col-lg-7">
-						<div class="input-group fixed-width-lg">
-							<span class="input-group-addon">{l s='columns'}</span>
-							<input name="item_img_w" type="text" maxlength="4"/>
-						</div>
+							{foreach from=$categories item=category}
+								<option value="{$category.id_category}">{$category.name}</option>  
+							{/foreach}
+
+						</select>
 					</div>
 				</div>
-				<div class="image_h item-field form-group">
-					<label class="control-label col-lg-3">{l s='Image height' mod='themeconfigurator'}</label>
-					<div class="col-lg-7">
-						<div class="input-group fixed-width-lg">
-							<span class="input-group-addon">{l s='px'}</span>
-							<input name="item_img_h" type="text" maxlength="4"/>
-						</div>
-					</div>
-				</div>
-				<div class="url item-field form-group">
-					<label class="control-label col-lg-3">{l s='URL' mod='themeconfigurator'}</label>
-					<div class="col-lg-7">
-						<input type="text" name="item_url" placeholder="http://" />
-					</div>
-				</div>
-				<div class="target item-field form-group">
-					<div class="col-lg-9 col-lg-offset-3">
-						<div class="checkbox">
-							<label class="control-label">
-								{l s='Target blank' mod='themeconfigurator'}
-								<input type="checkbox" name="item_target" value="1" />
-							</label>
-						</div>
-					</div>
-				</div>
+
 				<div class="html item-field form-group">
-					<label class="control-label col-lg-3">{l s='HTML' mod='themeconfigurator'}</label>
+					<label class="control-label col-lg-3">{l s='Description' mod='prettypegsattributepreferences'}</label>
 					<div class="col-lg-7">
-						<textarea name="item_description" cols="65" rows="12"></textarea>
+						<input type="text" name="description" >
 					</div>
 				</div>
+
+
 				<div class="form-group">
 					<div class="col-lg-7 col-lg-offset-3">
-						<button type="button" class="btn btn-default button-new-item-cancel"><i class="icon-remove"></i> {l s='Cancel' mod='themeconfigurator'}</button>
-						<button type="submit" name="newItem" class="btn btn-success button-save pull-right"><i class="icon-save"></i> {l s='Save' mod='themeconfigurator'}</button>
+						<button type="button" class="btn btn-default button-new-item-cancel"><i class="icon-remove"></i> {l s='Cancel' mod='prettypegsattributepreferences'}</button>
+						<button type="submit" name="newItem" class="btn btn-success button-save pull-right"><i class="icon-save"></i> {l s='Save' mod='prettypegsattributepreferences'}</button>
 					</div>
 				</div>
 			</div>
